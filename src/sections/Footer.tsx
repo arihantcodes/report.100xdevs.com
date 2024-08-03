@@ -9,7 +9,9 @@ const Footer = () => {
       <div className='container'>
         <div className='flex md:justify-between items-center md:flex-row flex-col'>
         <div>
+          <Link href="https://100xdevs.com/">
           <h1 className='font-bold'>100xDevs</h1>
+          </Link>
         </div>
         <div>
           <nav className="flex md:gap-8 gap-3 m-5 items-center text-sm flex-col md:flex-row">

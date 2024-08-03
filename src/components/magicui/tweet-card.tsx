@@ -8,6 +8,7 @@ import {
 import { getTweet, type Tweet } from "react-tweet/api";
 
 import { cn } from "@/lib/utils";
+import Image from "next/image";
 
 interface TwitterIconProps {
   className?: string;
@@ -106,7 +107,7 @@ export const TweetHeader = ({ tweet }: { tweet: EnrichedTweet }) => (
   <div className="flex flex-row justify-between tracking-tight">
     <div className="flex items-center space-x-2">
       <a href={tweet.user.url} target="_blank" rel="noreferrer">
-        <img
+        <Image
           title={`Profile picture of ${tweet.user.name}`}
           alt={tweet.user.screen_name}
           height={48}
@@ -198,9 +199,11 @@ export const TweetMedia = ({ tweet }: { tweet: EnrichedTweet }) => (
       <div className="relative flex transform-gpu snap-x snap-mandatory gap-4 overflow-x-auto">
         <div className="shrink-0 snap-center sm:w-2" />
         {tweet.photos.map((photo) => (
-          <img
+          <Image
             key={photo.url}
             src={photo.url}
+            height={400}
+            width={800}
             title={"Photo by" + tweet.user.name}
             alt={tweet.text}
             className="h-64 w-5/6 shrink-0 snap-center snap-always rounded-xl border border-slate-200 object-cover shadow-sm dark:border-slate-800"
@@ -213,9 +216,10 @@ export const TweetMedia = ({ tweet }: { tweet: EnrichedTweet }) => (
       !tweet.photos &&
       // @ts-ignore
       tweet?.card?.binding_values?.thumbnail_image_large?.image_value.url && (
-        <img
+        <Image
           // @ts-ignore
           src={tweet.card.binding_values.thumbnail_image_large.image_value.url}
+          alt="Tweet media"
           className="h-64 rounded-xl border border-slate-200 object-cover shadow-sm dark:border-slate-800"
         />
       )}

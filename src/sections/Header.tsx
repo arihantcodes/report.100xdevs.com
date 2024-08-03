@@ -13,11 +13,11 @@ const Header = () => {
   };
 
   return (
-    <header className="py-4 border-b border-white/15 md:border-none sticky top-0 z-10">
+    <header className="py-4 border-b bg-black border-white/15 md:border-none sticky top-0 z-10">
       <div className="container">
         <div className="flex justify-between md:border items-center rounded-xl border-white/15 md:p-2.5 max-w-2xl mx-auto">
           <div>
-            <h1>100xDevs</h1>
+            <h1 className="font-semibold">100xDevs</h1>
           </div>
 
           <div className="hidden md:block">
@@ -63,7 +63,7 @@ const Header = () => {
       </div>
       {isMenuOpen && (
         <div className="md:hidden mt-4 transition-transform duration-300 transform translate-y-0">
-          <nav className="flex flex-col gap-4 text-sm">
+          <nav className="flex flex-col items-center mt-5 rounded-md gap-4 text-sm">
             <Link
               className="text-white/70 hover:text-white transition"
               href="https://100xdevs.com/#course"
