@@ -12,7 +12,8 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea"; // Assuming you have a Textarea component
+import toast , { Toaster } from 'react-hot-toast';
+import { Textarea } from "@/components/ui/textarea";
 
 const ReportForm = () => {
   const [formData, setFormData] = useState({
@@ -21,6 +22,7 @@ const ReportForm = () => {
     email: "",
     reason: "",
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleInputChange = (e:any) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -28,20 +30,30 @@ const ReportForm = () => {
 
   const handleSubmit = async (e:any) => {
     e.preventDefault();
+    setIsSubmitting(true);
     try {
       const response = await axios.post("/api/v1/report", formData);
       console.log(response.data);
-      // Handle success (e.g., show a success message)
-    } catch (error) {
+      toast.success('Report submitted successfully!');
+      // Reset form data after successful submission
+      setFormData({
+        url: "",
+        reportedBy: "",
+        email: "",
+        reason: "",
+      });
+    } catch (error:any) {
       console.error("Error submitting report:", error);
-      // Handle error (e.g., show an error message)
+      toast.error('Error submitting report: ' + (error?.message || 'Unknown error'));
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   return (
     <div className="flex justify-center items-center flex-col mt-16">
       <h1 className="font-bold text-5xl mb-8 text-white text-center">
-        Join the Fight Against Piracy – Submit Links and Get Rewarded
+        Join the Fight Against<span className="text-transparent bg-clip-text bg-gradient-to-r from-violet-400 to-violet-600"> Piracy</span> <br /> & Get Rewarded
       </h1>
       <Card className="w-full max-w-lg bg-white p-8 text-black rounded-3xl shadow-xl">
         <CardHeader className="text-center mb-6">
@@ -60,6 +72,7 @@ const ReportForm = () => {
               required
               className="rounded-lg border-gray-300 focus:ring-2 focus:ring-purple-400 focus:border-transparent"
               onChange={handleInputChange}
+              value={formData.url}
             />
           </div>
           <div className="grid gap-2">
@@ -71,6 +84,7 @@ const ReportForm = () => {
               required
               className="rounded-lg border-gray-300 focus:ring-2 focus:ring-purple-400 focus:border-transparent"
               onChange={handleInputChange}
+              value={formData.reportedBy}
             />
           </div>
           <div className="grid gap-2">
@@ -83,6 +97,7 @@ const ReportForm = () => {
               required
               className="rounded-lg border-gray-300 focus:ring-2 focus:ring-purple-400 focus:border-transparent"
               onChange={handleInputChange}
+              value={formData.email}
             />
           </div>
           <div className="grid gap-2">
@@ -94,15 +109,21 @@ const ReportForm = () => {
               required
               className="rounded-lg border-gray-300 focus:ring-2 focus:ring-purple-400 focus:border-transparent"
               onChange={handleInputChange}
+              value={formData.reason}
             />
           </div>
         </CardContent>
         <CardFooter className="mt-6">
-          <Button className="w-full bg-gradient-to-r from-purple-500 to-indigo-500 text-white rounded-lg py-2 hover:from-purple-600 hover:to-indigo-600" onClick={handleSubmit}>
-            Submit Report
+          <Button 
+            className="w-full bg-gradient-to-r from-purple-500 to-indigo-500 text-white rounded-lg py-2 hover:from-purple-600 hover:to-indigo-600" 
+            onClick={handleSubmit}
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? 'Submitting...' : 'Submit Report'}
           </Button>
         </CardFooter>
       </Card>
+      <Toaster />
     </div>
   );
 };
