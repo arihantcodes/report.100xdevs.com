@@ -1,11 +1,14 @@
 import { Footer } from "@/sections/Footer";
-import { Hero } from "@/sections/Hero";
+import Header from "@/sections/Header";
+import  Hero  from "@/sections/Hero";
+import ReportForm from "@/sections/Report";
 
 export default function Home() {
-  return <div>
+  return <>
 
-
+    <Header/>
     <Hero/>
+    <ReportForm />
     <Footer/>
-  </div>;
+  </>;
 }
