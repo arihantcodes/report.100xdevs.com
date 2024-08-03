@@ -6,7 +6,7 @@ const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "100xDevs",
-  description: "A landing page for an AI startup created with Frontend Tribe",
+  description: "Join Our courses and get the firsthand knowledge about web and web3",
 };
 
 export default function RootLayout({
