@@ -25,6 +25,7 @@
     "react-dom": "^18",
     "react-hook-form": "^7.52.2",
     "react-hot-toast": "^2.4.1",
+    "react-tweet": "^3.2.1",
     "tailwind-merge": "^2.4.0",
     "tailwindcss-animate": "^1.0.7"
   },

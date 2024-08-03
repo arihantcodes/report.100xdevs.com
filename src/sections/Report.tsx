@@ -51,7 +51,7 @@ const ReportForm = () => {
   };
 
   return (
-    <div className="flex justify-center items-center flex-col mt-16">
+    <div className="flex justify-center items-center flex-col mt-16 mb-16">
       <h1 className="font-bold text-5xl mb-8 text-white text-center">
         Join the Fight Against<span className="text-transparent bg-clip-text bg-gradient-to-r from-violet-400 to-violet-600"> Piracy</span> <br /> & Get Rewarded
       </h1>
@@ -80,6 +80,7 @@ const ReportForm = () => {
             <Input
               id="reportedBy"
               name="reportedBy"
+              placeholder="/example"
               type="text"
               required
               className="rounded-lg border-gray-300 focus:ring-2 focus:ring-purple-400 focus:border-transparent"
