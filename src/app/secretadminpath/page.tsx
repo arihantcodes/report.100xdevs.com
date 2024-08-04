@@ -216,8 +216,8 @@ const Dashboard = () => {
                         <TableRow>
                           <TableHead>Pirated Content URL</TableHead>
                           <TableHead>Status</TableHead>
-                          <TableHead>Twitter username</TableHead>
-                          <TableHead className="hidden sm:table-cell">Email</TableHead>
+                          <TableHead  className="hidden sm:table-cell">Twitter username</TableHead>
+                          <TableHead className="hidden md:block">Email</TableHead>
                           <TableHead className="hidden md:table-cell">Created at</TableHead>
                           <TableHead className="hidden lg:table-cell">Reason</TableHead>
                           <TableHead>Actions</TableHead>
@@ -257,7 +257,7 @@ const Dashboard = () => {
                                 {report.status}
                               </Badge>
                             </TableCell>
-                            <TableCell className="max-w-[100px] truncate">{report.reportedBy}</TableCell>
+                            <TableCell className="max-w-[100px] truncate hidden md:block">{report.reportedBy}</TableCell>
                             <TableCell className="hidden sm:table-cell max-w-[150px] truncate">{report.email}</TableCell>
                             <TableCell className="hidden md:table-cell whitespace-nowrap">
                               {new Date(report.createdAt).toLocaleString()}
