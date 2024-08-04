@@ -6,13 +6,13 @@ connectDb();
 
 export async function GET(request: NextRequest) {
     try {
-        // Get query parameters
+       
         const url = new URL(request.url);
         const status = url.searchParams.get('status');
         const page = parseInt(url.searchParams.get('page') || '1');
         const limit = parseInt(url.searchParams.get('limit') || '10');
 
-        // Build query
+        
         let query = {};
         if (status) {
             query = { status };
@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
             .limit(limit)
             .sort({ createdAt: -1 }); // Sort by creation date, newest first
 
-        // Get total count for pagination
+      
         const totalReports = await Report.countDocuments(query);
 
         return NextResponse.json({
