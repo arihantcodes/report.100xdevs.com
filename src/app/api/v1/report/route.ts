@@ -14,6 +14,14 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ message: "Please provide all required fields" }, { status: 400 });
         }
 
+        // valid email check
+
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            return NextResponse.json({ message: "Please provide a valid email" }, { status: 400 });
+        }
+        
+
         const existingReport = await Report.findOne({ url });
 
         if (existingReport) {

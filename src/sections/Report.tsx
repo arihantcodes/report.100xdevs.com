@@ -5,15 +5,34 @@ import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
-  CardDescription,
   CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import toast , { Toaster } from 'react-hot-toast';
+import toast, { Toaster } from 'react-hot-toast';
 import { Textarea } from "@/components/ui/textarea";
+
+// Abusive words array (English and Hindi)
+const abusiveWords = [
+  // English words
+  "abuse", "asshole", "bastard", "bitch", "bollocks", "bullshit", "crap",
+  "cunt", "damn", "dick", "douche", "fag", "faggot", "fuck", "fucker", 
+  "fucking", "goddamn", "hell", "homo", "jerk", "kike", "motherfucker", 
+  "nigga", "nigger", "piss", "prick", "pussy", "shit", "slut", "spic", 
+  "twat", "wanker", "whore",
+
+  // Hindi words
+  "lund", "teri", "gand", "chutiya", "bhosdi", "madarchod", "behenchod", 
+  "gaand", "launda", "gaandmasti", "randi", "raand", "harami", 
+  "chinal", "kutta", "kamina", "kutti", "bhenchod", "bhen ke lode"
+];
+
+const containsAbusiveWords = (input: string) => {
+  const lowercasedInput = input.toLowerCase();
+  return abusiveWords.some(word => lowercasedInput.includes(word));
+};
 
 const ReportForm = () => {
   const [formData, setFormData] = useState({
@@ -24,12 +43,21 @@ const ReportForm = () => {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleInputChange = (e:any) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = async (e:any) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Check for abusive words in the form data
+    for (const key in formData) {
+      if (containsAbusiveWords(formData[key as keyof typeof formData])) {
+        toast.error('Please avoid using offensive language.');
+        return;
+      }
+    }
+
     setIsSubmitting(true);
     try {
       const response = await axios.post("/api/v1/report", formData);

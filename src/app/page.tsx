@@ -5,12 +5,12 @@ import ReportForm from "@/sections/Report";
 import { TweetDemo } from "@/sections/Testimonials";
 
 export default function Home() {
-  return <>
+  return <div className="bg-black text-white">
 
     <Header/>
     <Hero/>
     <ReportForm />
     <TweetDemo/>
     <Footer/>
-  </>;
+  </div>;
 }
