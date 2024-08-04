@@ -1,3 +1,4 @@
+import { match } from 'assert';
 import mongoose from 'mongoose';
 
 const reportSchema = new mongoose.Schema({
@@ -10,11 +11,16 @@ const reportSchema = new mongoose.Schema({
     email:{
         type: String,
         required: true,
-        trim: true
+        trim: true,
+        minLegth: 3 ,
+        match: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+
     },
     reportedBy: {
         type: String,
-        required: true
+        required: true,
+        trim: true,
+        minLegth:  [4,"username must be at least 4 characters long"] ,
     },
     status: {
         type: String,
@@ -23,7 +29,9 @@ const reportSchema = new mongoose.Schema({
     },
     reason: {
         type: String,
-        required: true
+        required: true,
+        trim: true,
+        minLegth:  [10,"reason must be at least 10 characters long"] ,
     }
 }, { timestamps: true });
 
