@@ -108,7 +108,7 @@ const ReportForm = () => {
             <Input
               id="reportedBy"
               name="reportedBy"
-              placeholder="/example"
+              placeholder="x username"
               type="text"
               required
               className="rounded-lg border-gray-300 focus:ring-2 focus:ring-purple-400 focus:border-transparent"
@@ -122,7 +122,7 @@ const ReportForm = () => {
               id="email"
               name="email"
               type="email"
-              placeholder="m@example.com"
+              placeholder="your@email.com"
               required
               className="rounded-lg border-gray-300 focus:ring-2 focus:ring-purple-400 focus:border-transparent"
               onChange={handleInputChange}
@@ -134,7 +134,7 @@ const ReportForm = () => {
             <Textarea
               id="reason"
               name="reason"
-              placeholder="Please provide details..."
+              placeholder="Please provide a detailed reason for your report."
               required
               className="rounded-lg border-gray-300 focus:ring-2 focus:ring-purple-400 focus:border-transparent"
               onChange={handleInputChange}
