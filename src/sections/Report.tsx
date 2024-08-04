@@ -67,10 +67,14 @@ const ReportForm = () => {
       const response = await axios.post("/api/v1/report", data);
       console.log(response.data);
       toast.success('Report submitted successfully!');
+      
       // Reset form data after successful submission
     } catch (error: any) {
       console.error("Error submitting report:", error);
-      toast.error('Error submitting report: ' + error.message);
+      if(error.message === 'Report already exists'){
+        toast.error('Report already exists');
+      }
+      toast.error('someone already reported this');
     } finally {
       setIsSubmitting(false);
     }
