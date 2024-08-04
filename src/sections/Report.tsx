@@ -13,6 +13,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import toast, { Toaster } from 'react-hot-toast';
 import { Textarea } from "@/components/ui/textarea";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
 
 // Abusive words array (English and Hindi)
 const abusiveWords = [
@@ -34,25 +37,26 @@ const containsAbusiveWords = (input: string) => {
   return abusiveWords.some(word => lowercasedInput.includes(word));
 };
 
+// Define Zod schema with minimum character limits
+const schema = z.object({
+  url: z.string().url().nonempty("Pirated Content URL is required"),
+  reportedBy: z.string().min(3, "Twitter Username must be at least 3 characters").nonempty("Twitter Username is required"),
+  email: z.string().email("Invalid email format").nonempty("Email is required"),
+  reason: z.string().min(10, "Reason for Report must be at least 10 characters").nonempty("Reason for Report is required")
+});
+
+type FormData = z.infer<typeof schema>;
+
 const ReportForm = () => {
-  const [formData, setFormData] = useState({
-    url: "",
-    reportedBy: "",
-    email: "",
-    reason: "",
+  const { register, handleSubmit, formState: { errors } } = useForm<FormData>({
+    resolver: zodResolver(schema)
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
+  const onSubmit = async (data: FormData) => {
     // Check for abusive words in the form data
-    for (const key in formData) {
-      if (containsAbusiveWords(formData[key as keyof typeof formData])) {
+    for (const key in data) {
+      if (containsAbusiveWords(data[key as keyof FormData])) {
         toast.error('Please avoid using offensive language.');
         return;
       }
@@ -60,19 +64,13 @@ const ReportForm = () => {
 
     setIsSubmitting(true);
     try {
-      const response = await axios.post("/api/v1/report", formData);
+      const response = await axios.post("/api/v1/report", data);
       console.log(response.data);
       toast.success('Report submitted successfully!');
       // Reset form data after successful submission
-      setFormData({
-        url: "",
-        reportedBy: "",
-        email: "",
-        reason: "",
-      });
-    } catch (error:any) {
+    } catch (error: any) {
       console.error("Error submitting report:", error);
-      toast.error('Error submitting report: ' + (error?.message || 'Unknown error'));
+      toast.error('Error submitting report: ' + error.message);
     } finally {
       setIsSubmitting(false);
     }
@@ -94,58 +92,48 @@ const ReportForm = () => {
             <Label htmlFor="url" className="text-gray-700">Pirated Content URL</Label>
             <Input
               id="url"
-              name="url"
-              type="url"
+              {...register("url")}
               placeholder="https://example.com"
-              required
               className="rounded-lg border-gray-300 focus:ring-2 focus:ring-purple-400 focus:border-transparent"
-              onChange={handleInputChange}
-              value={formData.url}
             />
+            {errors.url && <p className="text-red-500">{errors.url.message}</p>}
           </div>
           <div className="grid gap-2">
             <Label htmlFor="reportedBy" className="text-gray-700">Twitter Username</Label>
             <Input
               id="reportedBy"
-              name="reportedBy"
+              {...register("reportedBy")}
               placeholder="x username"
-              type="text"
-              required
               className="rounded-lg border-gray-300 focus:ring-2 focus:ring-purple-400 focus:border-transparent"
-              onChange={handleInputChange}
-              value={formData.reportedBy}
             />
+            {errors.reportedBy && <p className="text-red-500">{errors.reportedBy.message}</p>}
           </div>
           <div className="grid gap-2">
             <Label htmlFor="email" className="text-gray-700">Email</Label>
             <Input
               id="email"
-              name="email"
+              {...register("email")}
               type="email"
               placeholder="your@email.com"
-              required
               className="rounded-lg border-gray-300 focus:ring-2 focus:ring-purple-400 focus:border-transparent"
-              onChange={handleInputChange}
-              value={formData.email}
             />
+            {errors.email && <p className="text-red-500">{errors.email.message}</p>}
           </div>
           <div className="grid gap-2">
             <Label htmlFor="reason" className="text-gray-700">Reason for Report</Label>
             <Textarea
               id="reason"
-              name="reason"
+              {...register("reason")}
               placeholder="Please provide a detailed reason for your report."
-              required
               className="rounded-lg border-gray-300 focus:ring-2 focus:ring-purple-400 focus:border-transparent"
-              onChange={handleInputChange}
-              value={formData.reason}
             />
+            {errors.reason && <p className="text-red-500">{errors.reason.message}</p>}
           </div>
         </CardContent>
         <CardFooter className="mt-6">
           <Button 
             className="w-full bg-gradient-to-r from-purple-500 to-indigo-500 text-white rounded-lg py-2 hover:from-purple-600 hover:to-indigo-600" 
-            onClick={handleSubmit}
+            onClick={handleSubmit(onSubmit)}
             disabled={isSubmitting}
           >
             {isSubmitting ? 'Submitting...' : 'Submit Report'}
