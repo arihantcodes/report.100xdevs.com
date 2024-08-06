@@ -9,7 +9,7 @@ const client = twilio(accountSid, authToken);
 export async function POST(req: NextRequest) {
   try {
     const { to, message } = await req.json();
-    console.log("Received data:", { to, message }); 
+   
 
     if (!to || !message) {
       return NextResponse.json({ success: false, message: 'Missing "to" or "message" field' }, { status: 400 });

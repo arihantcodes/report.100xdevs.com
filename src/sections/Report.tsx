@@ -110,8 +110,7 @@ const ReportForm = () => {
   const [captcha, setCaptcha] = useState<string | null>();
   const onSubmit = async (data: FormData) => {
     // Check for abusive words in the form data
-    console.log(captcha);
-
+  
     for (const key in data) {
       if (containsAbusiveWords(data[key as keyof FormData])) {
         toast.error("Please avoid using offensive language.");

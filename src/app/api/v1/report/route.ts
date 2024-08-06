@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
         }, { status: 201});
 
     } catch (error: any) {
-        console.log('Something went wrong while connecting to DB');
+       
         console.error(error);
         return NextResponse.json({ message: "Something went wrong while connecting" }, { status: 500 });
 

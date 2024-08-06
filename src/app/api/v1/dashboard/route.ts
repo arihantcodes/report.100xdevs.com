@@ -39,7 +39,7 @@ export async function GET(request: NextRequest) {
         }, { status: 200 });
 
     } catch (error: any) {
-        console.log('Something went wrong while fetching reports');
+      
         console.error(error);
         return NextResponse.json({ message: "Something went wrong while fetching reports" }, { status: 500 });
     }

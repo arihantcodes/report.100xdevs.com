@@ -94,7 +94,7 @@ const Dashboard = () => {
   const handleAction = async (reportId: string, action: string) => {
     try {
       const response = await axios.post("/api/v1/action", { reportId, action });
-      console.log(response.data);
+    
       fetchReports(currentPage);
     } catch (error) {
       console.error(`Error ${action} report:`, error);
@@ -148,22 +148,22 @@ const Dashboard = () => {
 
   const sendApprovedData = async () => {
     if (isSending) {
-      console.log("Already sending data. Skipping.");
+    
       return;
     }
     setIsSending(true);
     try {
-      console.log("Fetching approved data...");
+   
       const approvedReports = await fetchApprovedData();
-      console.log("Approved reports:", approvedReports);
+  
 
       if (approvedReports.length === 0) {
-        console.log("No new approved reports to send.");
+       
         return;
       }
 
       const reportsToSend = approvedReports.slice(0, 3);
-      console.log("Reports to send:", reportsToSend);
+     
 
       const formattedReports = reportsToSend.map(
         (report: {
@@ -187,23 +187,20 @@ const Dashboard = () => {
         .map((report: any) => JSON.stringify(report, null, 2))
         .join("\n\n");
 
-      console.log("Formatted message:", message);
-
-      console.log("Sending WhatsApp message...");
       const response = await axios.post("/api/v1/whatsapp", {
         to: process.env.NEXT_PUBLIC_WHATSAPP_NUMBER,
         message: message,
       });
       
 
-      console.log("WhatsApp API response:", response.data);
+     
 
       reportsToSend.forEach((report: { _id: any }) => {
-        console.log("Marking report as sent:", report._id);
+      
         addSentReportId(report._id);
       });
 
-      console.log("Data sending process completed successfully.");
+     
     } catch (error) {
       console.error("Error in sendApprovedData:", error);
       if (axios.isAxiosError(error)) {

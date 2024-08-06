@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ message: "Action performed successfully", data: result }, { status: 200 });
 
     } catch (error: any) {
-        console.log('Something went wrong while performing the action');
+       
         console.error(error);
         return NextResponse.json({ message: "Something went wrong while performing the action" }, { status: 500 });
     }
