@@ -8,7 +8,12 @@ export async function POST(request: NextRequest) {
 
     try {
         const reqBody = await request.json();
-        const { url, reportedBy,email, reason } = reqBody;
+        const { url, reportedBy,email, reason,captcha } = reqBody;
+
+        if(!captcha || captcha.length === 0 || captcha === null){
+            return NextResponse.json({ message: "Bot is not allow" }, { status: 400 });
+        }
+
 
         if (!url || !reportedBy || !email || !reason) {
             return NextResponse.json({ message: "Please provide all required fields" }, { status: 400 });

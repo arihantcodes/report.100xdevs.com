@@ -1,8 +1,8 @@
 "use client";
+import axios from "axios";
 import Image from "next/image";
 import Link from "next/link";
-import { File, ListFilter, MoreHorizontal, PlusCircle, Search } from "lucide-react";
-
+import { File, ListFilter, MoreHorizontal, Search } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import {
   Breadcrumb,
@@ -30,7 +30,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Input } from "@/components/ui/input";
 
 import {
   Table,
@@ -45,7 +44,6 @@ import { useEffect, useState } from "react";
 
 interface Report {
   reason: string;
-
   _id: string;
   url: string;
   status: string;
@@ -54,20 +52,36 @@ interface Report {
   createdAt: string;
 }
 
+interface Filters {
+  approved: boolean;
+  rejected: boolean;
+  pending: boolean;
+}
+
 const Dashboard = () => {
   const [reports, setReports] = useState<Report[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalReports, setTotalReports] = useState(0);
+  const [filters, setFilters] = useState<Filters>({
+    approved: false,
+    rejected: false,
+    pending: false,
+  });
+  const [isSending, setIsSending] = useState(false);
   const reportsPerPage = 10;
 
   const fetchReports = async (page: number) => {
     try {
-      const response = await fetch(
-        `/api/v1/dashboard?page=${page}&limit=${reportsPerPage}`
-      );
-      const data = await response.json();
-      setReports(data.data);
-      setTotalReports(data.totalReports);
+      const params = {
+        page: page.toString(),
+        limit: reportsPerPage.toString(),
+        ...(filters.approved && { status: "approved" }),
+        ...(filters.rejected && { status: "rejected" }),
+        ...(filters.pending && { status: "pending" }),
+      };
+      const response = await axios.get("/api/v1/dashboard", { params });
+      setReports(response.data.data);
+      setTotalReports(response.data.totalReports);
     } catch (error) {
       console.error("Error fetching reports:", error);
     }
@@ -75,28 +89,146 @@ const Dashboard = () => {
 
   useEffect(() => {
     fetchReports(currentPage);
-  }, [currentPage]);
+  }, [currentPage, filters]);
 
   const handleAction = async (reportId: string, action: string) => {
     try {
-      const response = await fetch(`/api/v1/action`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ reportId, action }),
-      });
-      const data = await response.json();
-      console.log(data);
-
+      const response = await axios.post("/api/v1/action", { reportId, action });
+      console.log(response.data);
       fetchReports(currentPage);
     } catch (error) {
       console.error(`Error ${action} report:`, error);
     }
   };
 
-  const totalPages = Math.ceil(totalReports / reportsPerPage);
+  const getSentReportIds = () => {
+    const sentReports = localStorage.getItem("sentReports");
+    return sentReports ? JSON.parse(sentReports) : [];
+  };
 
+  const addSentReportId = (id: any) => {
+    const sentReports = getSentReportIds();
+    if (!sentReports.includes(id)) {
+      sentReports.push(id);
+      localStorage.setItem("sentReports", JSON.stringify(sentReports));
+    }
+  };
+
+  const fetchApprovedData = async () => {
+    try {
+      const response = await axios.get("/api/v1/dashboard", {
+        params: { status: "approved" },
+      });
+      const data = response.data;
+
+      const uniqueReports = Array.from(
+        new Set(data.data.map((report: { _id: any }) => report._id))
+      ).map((id) =>
+        data.data.find((report: { _id: unknown }) => report._id === id)
+      );
+
+      const now = new Date();
+      const twelveHoursAgo = new Date(now.getTime() - 12 * 60 * 60 * 1000);
+
+      const sentReportIds = getSentReportIds();
+
+      const filteredReports = uniqueReports.filter((report) => {
+        const reportDate = new Date(report.updatedAt);
+        return (
+          reportDate >= twelveHoursAgo && !sentReportIds.includes(report._id)
+        );
+      });
+
+      return filteredReports;
+    } catch (error) {
+      console.error("Error fetching approved data:", error);
+      return [];
+    }
+  };
+
+  const sendApprovedData = async () => {
+    if (isSending) {
+      console.log("Already sending data. Skipping.");
+      return;
+    }
+    setIsSending(true);
+    try {
+      console.log("Fetching approved data...");
+      const approvedReports = await fetchApprovedData();
+      console.log("Approved reports:", approvedReports);
+
+      if (approvedReports.length === 0) {
+        console.log("No new approved reports to send.");
+        return;
+      }
+
+      const reportsToSend = approvedReports.slice(0, 3);
+      console.log("Reports to send:", reportsToSend);
+
+      const formattedReports = reportsToSend.map(
+        (report: {
+          url: any;
+          email: any;
+          reportedBy: any;
+          status: any;
+          reason: any;
+        }) => ({
+          message: {
+            url: report.url,
+            email: report.email,
+            reportedBy: report.reportedBy,
+            status: report.status,
+            reason: report.reason,
+          },
+        })
+      );
+
+      const message = formattedReports
+        .map((report: any) => JSON.stringify(report, null, 2))
+        .join("\n\n");
+
+      console.log("Formatted message:", message);
+
+      console.log("Sending WhatsApp message...");
+      const response = await axios.post("/api/v1/whatsapp", {
+        to: process.env.NEXT_PUBLIC_WHATSAPP_NUMBER,
+        message: message,
+      });
+      
+
+      console.log("WhatsApp API response:", response.data);
+
+      reportsToSend.forEach((report: { _id: any }) => {
+        console.log("Marking report as sent:", report._id);
+        addSentReportId(report._id);
+      });
+
+      console.log("Data sending process completed successfully.");
+    } catch (error) {
+      console.error("Error in sendApprovedData:", error);
+      if (axios.isAxiosError(error)) {
+        console.error("Axios error details:", error.response?.data);
+      }
+    } finally {
+      setIsSending(false);
+    }
+  };
+  useEffect(() => {
+    const fetchAndSendData = async () => {
+      await fetchApprovedData();
+      await sendApprovedData();
+    };
+
+    fetchAndSendData();
+
+    //  run the function every hour
+    const intervalId = setInterval(fetchAndSendData, 60 * 60 * 1000);
+
+    // Clean up the interval when the component unmounts
+    return () => clearInterval(intervalId);
+  }, []);
+
+  const totalPages = Math.ceil(totalReports / reportsPerPage);
   const startReportIndex = (currentPage - 1) * reportsPerPage + 1;
   const endReportIndex = Math.min(currentPage * reportsPerPage, totalReports);
 
@@ -112,22 +244,12 @@ const Dashboard = () => {
                 </BreadcrumbLink>
               </BreadcrumbItem>
               <BreadcrumbSeparator />
-
-
-
               <BreadcrumbItem>
                 <BreadcrumbPage>All Reports</BreadcrumbPage>
               </BreadcrumbItem>
             </BreadcrumbList>
           </Breadcrumb>
-          <div className="relative ml-auto flex-1 md:grow-0">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              type="search"
-              placeholder="Search..."
-              className="w-full rounded-lg bg-background pl-8 md:w-[200px] lg:w-[320px]"
-            />
-          </div>
+          <div className="relative ml-auto flex-1 md:grow-0 font-bold">100xDevs</div>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
@@ -159,11 +281,6 @@ const Dashboard = () => {
             <div className="flex items-center">
               <TabsList>
                 <TabsTrigger value="all">All</TabsTrigger>
-                <TabsTrigger value="active">Approved</TabsTrigger>
-                <TabsTrigger value="draft">Rejected</TabsTrigger>
-                <TabsTrigger value="archived" className="hidden sm:flex">
-                  Pending
-                </TabsTrigger>
               </TabsList>
               <div className="ml-auto flex items-center gap-2">
                 <DropdownMenu>
@@ -178,25 +295,41 @@ const Dashboard = () => {
                   <DropdownMenuContent align="end">
                     <DropdownMenuLabel>Filter by</DropdownMenuLabel>
                     <DropdownMenuSeparator />
-                    <DropdownMenuCheckboxItem checked>
-                      Active
+                    <DropdownMenuCheckboxItem
+                      checked={filters.approved}
+                      onCheckedChange={(checked) =>
+                        setFilters({ ...filters, approved: checked as boolean })
+                      }
+                    >
+                      Approved
                     </DropdownMenuCheckboxItem>
-                    <DropdownMenuCheckboxItem>Draft</DropdownMenuCheckboxItem>
-                    <DropdownMenuCheckboxItem>
-                      Archived
+                    <DropdownMenuCheckboxItem
+                      checked={filters.rejected}
+                      onCheckedChange={(checked) =>
+                        setFilters({ ...filters, rejected: checked as boolean })
+                      }
+                    >
+                      Rejected
+                    </DropdownMenuCheckboxItem>
+                    <DropdownMenuCheckboxItem
+                      checked={filters.pending}
+                      onCheckedChange={(checked) =>
+                        setFilters({ ...filters, pending: checked as boolean })
+                      }
+                    >
+                      Pending
                     </DropdownMenuCheckboxItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
-                <Button size="sm" variant="outline" className="h-8 gap-1">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="h-8 gap-1"
+                  onClick={sendApprovedData}
+                >
                   <File className="h-3.5 w-3.5" />
                   <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
-                    Export
-                  </span>
-                </Button>
-                <Button size="sm" className="h-8 gap-1">
-                  <PlusCircle className="h-3.5 w-3.5" />
-                  <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
-                    Add Product
+                    Send Data To WhatsApp
                   </span>
                 </Button>
               </div>
@@ -216,10 +349,18 @@ const Dashboard = () => {
                         <TableRow>
                           <TableHead>Pirated Content URL</TableHead>
                           <TableHead>Status</TableHead>
-                          <TableHead  className="hidden sm:table-cell">Twitter username</TableHead>
-                          <TableHead className="hidden md:block">Email</TableHead>
-                          <TableHead className="hidden md:table-cell">Created at</TableHead>
-                          <TableHead className="hidden lg:table-cell">Reason</TableHead>
+                          <TableHead className="hidden sm:table-cell">
+                            Twitter username
+                          </TableHead>
+                          <TableHead className="hidden md:block">
+                            Email
+                          </TableHead>
+                          <TableHead className="hidden md:table-cell">
+                            Created at
+                          </TableHead>
+                          <TableHead className="hidden lg:table-cell">
+                            Reason
+                          </TableHead>
                           <TableHead>Actions</TableHead>
                         </TableRow>
                       </TableHeader>
@@ -244,21 +385,25 @@ const Dashboard = () => {
                                     report.status === "approved"
                                       ? "green"
                                       : report.status === "rejected"
-                                        ? "red"
-                                        : "black",
+                                      ? "red"
+                                      : "black",
                                   borderColor:
                                     report.status === "approved"
                                       ? "green"
                                       : report.status === "rejected"
-                                        ? "red"
-                                        : "gray",
+                                      ? "red"
+                                      : "gray",
                                 }}
                               >
                                 {report.status}
                               </Badge>
                             </TableCell>
-                            <TableCell className="max-w-[100px] truncate hidden md:block">{report.reportedBy}</TableCell>
-                            <TableCell className="hidden sm:table-cell max-w-[150px] truncate">{report.email}</TableCell>
+                            <TableCell className="max-w-[100px] truncate hidden md:block">
+                              {report.reportedBy}
+                            </TableCell>
+                            <TableCell className="hidden sm:table-cell max-w-[150px] truncate">
+                              {report.email}
+                            </TableCell>
                             <TableCell className="hidden md:table-cell whitespace-nowrap">
                               {new Date(report.createdAt).toLocaleString()}
                             </TableCell>
@@ -279,13 +424,25 @@ const Dashboard = () => {
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end">
                                   <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                  <DropdownMenuItem onClick={() => handleAction(report._id, "approve")}>
+                                  <DropdownMenuItem
+                                    onClick={() =>
+                                      handleAction(report._id, "approve")
+                                    }
+                                  >
                                     Approve
                                   </DropdownMenuItem>
-                                  <DropdownMenuItem onClick={() => handleAction(report._id, "reject")}>
+                                  <DropdownMenuItem
+                                    onClick={() =>
+                                      handleAction(report._id, "reject")
+                                    }
+                                  >
                                     Reject
                                   </DropdownMenuItem>
-                                  <DropdownMenuItem onClick={() => handleAction(report._id, "delete")}>
+                                  <DropdownMenuItem
+                                    onClick={() =>
+                                      handleAction(report._id, "delete")
+                                    }
+                                  >
                                     Delete
                                   </DropdownMenuItem>
                                 </DropdownMenuContent>
