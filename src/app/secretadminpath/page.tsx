@@ -94,7 +94,7 @@ const Dashboard = () => {
   const handleAction = async (reportId: string, action: string) => {
     try {
       const response = await axios.post("/api/v1/action", { reportId, action });
-    
+
       fetchReports(currentPage);
     } catch (error) {
       console.error(`Error ${action} report:`, error);
@@ -148,59 +148,39 @@ const Dashboard = () => {
 
   const sendApprovedData = async () => {
     if (isSending) {
-    
       return;
     }
     setIsSending(true);
     try {
-   
       const approvedReports = await fetchApprovedData();
-  
 
       if (approvedReports.length === 0) {
-       
         return;
       }
 
       const reportsToSend = approvedReports.slice(0, 3);
-     
 
       const formattedReports = reportsToSend.map(
         (report: {
-          url: any;
-          email: any;
-          reportedBy: any;
-          status: any;
-          reason: any;
-        }) => ({
-          message: {
-            url: report.url,
-            email: report.email,
-            reportedBy: report.reportedBy,
-            status: report.status,
-            reason: report.reason,
-          },
-        })
+          url: string;
+          email: string;
+          reportedBy: string;
+          status: string;
+          reason: string;
+        }) => `URL: ${report.url}\nEmail: ${report.email}\nReported By: ${report.reportedBy}\nStatus: ${report.status}\nReason: ${report.reason}`
       );
-
-      const message = formattedReports
-        .map((report: any) => JSON.stringify(report, null, 2))
-        .join("\n\n");
-
+  
+      const message = formattedReports.join("\n\n");
+  
+      console.log("Message to send:", message);
       const response = await axios.post("/api/v1/whatsapp", {
         to: process.env.NEXT_PUBLIC_WHATSAPP_NUMBER,
         message: message,
       });
-      
-
-     
 
       reportsToSend.forEach((report: { _id: any }) => {
-      
         addSentReportId(report._id);
       });
-
-     
     } catch (error) {
       console.error("Error in sendApprovedData:", error);
       if (axios.isAxiosError(error)) {
@@ -246,7 +226,9 @@ const Dashboard = () => {
               </BreadcrumbItem>
             </BreadcrumbList>
           </Breadcrumb>
-          <div className="relative ml-auto flex-1 md:grow-0 font-bold">100xDevs</div>
+          <div className="relative ml-auto flex-1 md:grow-0 font-bold">
+            100xDevs
+          </div>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
