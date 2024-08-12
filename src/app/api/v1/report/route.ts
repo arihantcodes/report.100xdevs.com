@@ -11,7 +11,7 @@ const rateLimitStore = new Map();
 const RATE_LIMIT_TIME_FRAME = 15 * 60 * 1000; // 15 minutes
 const RATE_LIMIT_MAX_REQUESTS = 3; // Max 3 requests per IP per time frame
 
-function rateLimit(request) {
+function rateLimit(request:NextRequest) {
     const ip = request.headers.get('x-forwarded-for') || request.ip ;
     console.log('IP:', ip);
     
