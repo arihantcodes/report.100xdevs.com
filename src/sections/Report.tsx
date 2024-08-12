@@ -174,12 +174,12 @@ const ReportForm = () => {
           </div>
           <div className="grid gap-2">
             <Label htmlFor="reportedBy" className="text-gray-700">
-              Twitter Username
+              Your Name
             </Label>
             <Input
               id="reportedBy"
               {...register("reportedBy")}
-              placeholder="x username"
+              placeholder="Your name"
               className="rounded-lg border-gray-300 focus:ring-2 focus:ring-purple-400 focus:border-transparent"
             />
             {errors.reportedBy && (
