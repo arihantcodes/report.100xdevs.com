@@ -82,7 +82,7 @@ const containsAbusiveWords = (input: string) => {
   return abusiveWords.some((word) => lowercasedInput.includes(word));
 };
 
-// Define Zod schema with minimum character limits
+// Define Zod schema with minimum character limits and honeypot
 const schema = z.object({
   url: z.string().url().nonempty("Pirated Content URL is required"),
   reportedBy: z
@@ -94,6 +94,7 @@ const schema = z.object({
     .string()
     .min(10, "Reason for Report must be at least 10 characters")
     .nonempty("Reason for Report is required"),
+  honeypot: z.string().max(0, "This field should be left empty"),
 });
 
 type FormData = z.infer<typeof schema>;
@@ -108,9 +109,15 @@ const ReportForm = () => {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [captcha, setCaptcha] = useState<string | null>();
+
   const onSubmit = async (data: FormData) => {
+    // Check honeypot
+    if (data.honeypot && data.honeypot.length > 0) {
+      console.log("Bot detected");
+      return;
+    }
+
     // Check for abusive words in the form data
-  
     for (const key in data) {
       if (containsAbusiveWords(data[key as keyof FormData])) {
         toast.error("Please avoid using offensive language.");
@@ -122,7 +129,6 @@ const ReportForm = () => {
     try {
       if (captcha && captcha.length > 0 && captcha !== null) {
         const response = await axios.post("/api/v1/report", {...data, captcha});
-
         toast.success("Report submitted successfully!");
       }
       // Reset form data after successful submission
@@ -131,7 +137,7 @@ const ReportForm = () => {
       if (error.message === "Report already exists") {
         toast.error("Report already exists");
       }
-      toast.error("someone already reported this");
+      toast.error("Someone already reported this");
     } finally {
       setIsSubmitting(false);
     }
@@ -209,6 +215,17 @@ const ReportForm = () => {
               <p className="text-red-500">{errors.reason.message}</p>
             )}
           </div>
+          <div className="honeypot-field">
+            <Label htmlFor="honeypot" className="text-gray-700">
+              Leave this field empty
+            </Label>
+            <Input
+              id="honeypot"
+              {...register("honeypot")}
+              placeholder="Do not fill this in"
+              className="honeypot-input"
+            />
+          </div>
         </CardContent>
         <ReCAPTCHA
           className="ml-8"
@@ -226,6 +243,11 @@ const ReportForm = () => {
         </CardFooter>
       </Card>
       <Toaster />
+      <style jsx>{`
+        .honeypot-field {
+          display: none;
+        }
+      `}</style>
     </div>
   );
 };
