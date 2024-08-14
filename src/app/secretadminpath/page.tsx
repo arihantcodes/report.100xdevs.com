@@ -41,7 +41,7 @@ import {
 } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useEffect, useState } from "react";
-
+import { stringify } from "csv-stringify/sync";
 interface Report {
   reason: string;
   _id: string;
@@ -153,32 +153,49 @@ const Dashboard = () => {
     setIsSending(true);
     try {
       const approvedReports = await fetchApprovedData();
-
+  
       if (approvedReports.length === 0) {
+        console.log("No new approved reports to send.");
         return;
       }
-
-      const reportsToSend = approvedReports.slice(0, 3);
-
-      const formattedReports = reportsToSend.map(
-        (report: {
-          url: string;
-          email: string;
-          reportedBy: string;
-          status: string;
-          reason: string;
-        }) => `URL: ${report.url}\nEmail: ${report.email}\nReported By: ${report.reportedBy}\nStatus: ${report.status}\nReason: ${report.reason}`
-      );
   
-      const message = formattedReports.join("\n\n");
+      // Prepare data for CSV
+      const csvData = approvedReports.map((report) => ({
+        URL: report.url,
+        Email: report.email,
+        ReportedBy: report.reportedBy,
+        Status: report.status,
+        Reason: report.reason,
+        CreatedAt: new Date(report.createdAt).toLocaleString(),
+      }));
   
-      console.log("Message to send:", message);
-      const response = await axios.post("/api/v1/whatsapp", {
-        to: process.env.NEXT_PUBLIC_WHATSAPP_NUMBER,
-        message: message,
+      // Generate CSV string
+      const csvString = stringify(csvData, {
+        header: true,
+        columns: [
+          "URL",
+          "Email",
+          "ReportedBy",
+          "Status",
+          "Reason",
+          "CreatedAt",
+        ],
       });
-
-      reportsToSend.forEach((report: { _id: any }) => {
+  
+      // Send CSV 
+      const response = await axios.post("/api/v1/whatsapp", {
+        fileName: "approved_reports.csv",
+        fileContent: csvString,
+      });
+  
+      if (response.status === 200) {
+        console.log("CSV sent to WhatsApp successfully.");
+      } else {
+        console.error("Failed to send CSV to WhatsApp.");
+      }
+  
+      // Mark reports as sent
+      approvedReports.forEach((report) => {
         addSentReportId(report._id);
       });
     } catch (error) {
@@ -190,6 +207,9 @@ const Dashboard = () => {
       setIsSending(false);
     }
   };
+  
+  
+
   useEffect(() => {
     const fetchAndSendData = async () => {
       await fetchApprovedData();

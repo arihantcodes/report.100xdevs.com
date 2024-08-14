@@ -9,7 +9,7 @@ connectDb();
 // In-memory store for tracking requests
 const rateLimitStore = new Map();
 const RATE_LIMIT_TIME_FRAME = 15 * 60 * 1000; // 15 minutes
-const RATE_LIMIT_MAX_REQUESTS = 8; // Max 3 requests per IP per time frame
+const RATE_LIMIT_MAX_REQUESTS = 12; // 12 requests per 15 minutes
 
 function rateLimit(request:NextRequest) {
     const ip = request.headers.get('x-forwarded-for') || request.ip ;
