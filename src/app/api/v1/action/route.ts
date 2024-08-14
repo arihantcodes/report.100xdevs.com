@@ -20,9 +20,7 @@ export async function POST(request: NextRequest) {
             case "reject":
                 result = await Report.findByIdAndUpdate(reportId, { status: "rejected" }, { new: true });
                 break;
-            case "delete":
-                result = await Report.findByIdAndDelete(reportId);
-                break;
+            
             default:
                 return NextResponse.json({ message: "Invalid action" }, { status: 400 });
         }
